@@ -1,0 +1,48 @@
+{
+  "name": "woker-thread-wrapper",
+  "version": "0.0.1",
+  "description": "An utility to simplify the use of web workers.",
+  "main": "dist/wtw.min.js",
+  "scripts": {
+    "preintegration": "NODE_ENV=production rollup --config src/tests/integration/config/rollup.sworker.js",
+    "integration": "testcafe chrome src/tests/integration/*.test.js",
+    "test": "jest",
+    "build": "yarn test && yarn integration && NODE_ENV=production rollup -c",
+    "build:skipTest": "NODE_ENV=production rollup -c",
+    "build:config": "tsc rollup.config.ts",
+    "build:js": "rollup -c",
+    "build:ts": "rollup --config rollup.config.ts --configPlugin typescript"
+  },
+  "keywords": [
+    "Web",
+    "Worker",
+    "Simple",
+    "Util",
+    "Tool"
+  ],
+  "author": "fons.yang",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.18.9",
+    "@babel/core": "^7.18.9",
+    "@babel/preset-env": "^7.18.9",
+    "@babel/preset-typescript": "^7.18.6",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-commonjs": "^22.0.1",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-typescript": "^8.3.3",
+    "@types/jest": "^28.1.6",
+    "@types/node": "^18.6.1",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "jest": "^28.1.3",
+    "rollup": "^2.77.0",
+    "rollup-plugin-dts": "^4.2.2",
+    "rollup-plugin-filesize": "^9.1.2",
+    "rollup-plugin-uglify": "^6.0.4",
+    "testcafe": "^1.20.0",
+    "ts-jest": "^28.0.7",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  }
+}
