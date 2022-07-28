@@ -1,17 +1,17 @@
-# wokerThreadWrapper
+# workerThreadWrapper
 * Secondary development based on [simple-web-worker]()
 > An utility to simplify the use of web workers. like to java thread class
 
 ## Changelog
 
-### **0.0.1**
+### **0.0.4**
 
 #### _Highlights:_
-* Added tests
-* Fixed `object URL`'s not being revoked when worker is not being used anymore.
-
-See full changelog [here](https://github.com/israelss/simple-web-worker/blob/master/changelog.md#120).
-
+* 0.0.1: First upload. and 
+* 0.0.2: add typings. dist/index.d.ts
+* 0.0.3: modify rollup.config types file. dist/index.d.ts
+* 0.0.4: modify types definition. Use when perfecting typescript project references
+* 0.0.5: Remove redundant dependencies on npm.
 ## Why
 
 Create and use [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) can be cumbersome sometimes. This plugin aims to facilitate the use of Web Workers.
@@ -32,6 +32,13 @@ Then:
 import WorkerBuilder from 'worker-thread-wrapper'
 // Returns a thread wrapper class
 const Thread = new WorkerBuilder().build()
+// run thread 
+new Thread().run(your_task, [args])(delay)?.then().catch()
+
+// Returns undefined if the browser does not have the execution conditions
+const promise = new Thread().run(your_task, [args])(delay)
+// promise is undefined
+// console.error: This browser does not have the conditions for execution
 ```
 Obviously, you don't have to call it `WorkerBuilder`. You are free to use the name you want!
 
@@ -51,12 +58,10 @@ Obviously, you don't have to call it `WorkerBuilder`. You are free to use the na
 E.g.:
 ```javascript
 // Automatically closes until the function is executed
- new Thread().run(() => 'SWorker run 1: Function in other thread')()
-  .then(console.log) // logs 'Thread run 1: Function in other thread'
+ new Thread().run(() => 'SWorker run 1: Function in other thread')()?.then(console.log) // logs 'Thread run 1: Function in other thread'
   .catch(console.error) // logs any possible error
 
-new Thread().run((arg1, arg2) => `SWorker run 2: ${arg1} ${arg2}`, ['Another', 'function in other thread'])()
-    .then(console.log) // logs 'SWorker run 2: Another function in other thread'
+new Thread().run((arg1, arg2) => `SWorker run 2: ${arg1} ${arg2}`, ['Another', 'function in other thread'])()?.then(console.log) // logs 'Thread run 2: Another function in other thread'
     .catch(console.error) // logs any possible error
 
 // setting survival time is 2050 ms. 
@@ -68,8 +73,7 @@ new Thread().run(index => {
         continue;
       }
       return index
-    }, ["hello world"])(2050)
-      .then(result => {
+    }, ["hello world"])(2050)?.then(result => {
         resultEl.innerHTML = result
         return result
       })
@@ -86,8 +90,7 @@ new thread().run(index => {
         continue;
       }
       return index
-    }, ["hello world"])(1950)
-      .then(result => {
+    }, ["hello world"])(1950)?.then(result => {
         resultEl.innerHTML = result
         return result
       })
@@ -104,8 +107,7 @@ new thread().run(index => {
         continue;
       }
       return index
-    }, ["hello world"])(2000)
-      .then(result => {
+    }, ["hello world"])(2000)?.then(result => {
         resultEl.innerHTML = result
         return result
       })

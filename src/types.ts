@@ -1,9 +1,7 @@
-
-// a simple wrapper for Worker, faster than using Worker directly
-// using WorkerWrapper to running one-time task 
-declare interface WorkerWrapper {
-  // run worker task
-  run: <T>(task: Function, args?: any) => (delay?: number) => Promise<T | string> | null;
+import { ThreadBase } from "./ThreadBase";
+declare interface ThreadConstructor {
+  readonly prototype: ThreadBase;
+  new (): ThreadBase;
 }
 
 // register task Base
@@ -57,7 +55,7 @@ declare type PostParams = FuncMessage & {
 }
 
 export {
-  WorkerWrapper,
+  ThreadConstructor,
   WorkerTasksWrapperInterface,
   WorkerPoolInterface,
   BaseObject,

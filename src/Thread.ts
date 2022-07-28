@@ -1,9 +1,11 @@
-import { WorkerWrapper, ArgumentType } from "./index.d";
+import { ArgumentType } from "./types";
 import { DeamonWorker, Deamon } from "./DaemonWorker";
 import { isValid, argumentError } from "./utils";
+import { ThreadBase } from "./ThreadBase";
 
-export class Thread implements WorkerWrapper {
+export class Thread extends ThreadBase {
   constructor(threadOptions?: { objectUri?: string, worker?: Worker, deamonWorker?: Deamon }) {
+    super()
     this.objectUri = threadOptions?.objectUri;
     this.worker = threadOptions?.worker;
     this.deamonWorker = threadOptions?.deamonWorker || DeamonWorker
@@ -74,7 +76,6 @@ export class Thread implements WorkerWrapper {
           reject(`${e.data}. this worker is closed`)
         }
         deammonTiming.port.postMessage([delay])
-        console.log("deamonWorker timing start...")
       })
     }
     return undefined

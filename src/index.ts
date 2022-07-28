@@ -1,14 +1,11 @@
 import { Thread } from "./Thread"
-
+import { ThreadBase } from "./ThreadBase"
+import { ThreadConstructor } from "./types"
 class WorkerBuilder {
-  private thread: any;
-
+  private thread: ThreadConstructor;
+  
   constructor() {
-
-    this.thread = class{
-          constructor(){}
-          public run = () => {console.error('This browser does not have the conditions for execution')}
-        }
+    this.thread = ThreadBase
     if (!window.Worker) {
       console.error('This browser does not support Workers.')
       return

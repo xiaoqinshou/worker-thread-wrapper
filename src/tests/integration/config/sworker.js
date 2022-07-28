@@ -1,5 +1,19 @@
 'use strict';
 
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -159,129 +173,150 @@ var argumentError = function argumentError(_ref) {
   }
 };
 
-var Thread = /*#__PURE__*/_createClass(function Thread(threadOptions) {
-  var _this2 = this;
+var ThreadBase = /*#__PURE__*/_createClass(function ThreadBase() {
+  _classCallCheck(this, ThreadBase);
 
-  _classCallCheck(this, Thread);
-
-  _defineProperty(this, "deamonWorker", void 0);
-
-  _defineProperty(this, "objectUri", void 0);
-
-  _defineProperty(this, "worker", void 0);
-
-  _defineProperty(this, "buildScript", function (task) {
-    return "\n  self.onmessage = function(event) {\n    const args = event.data.message.args\n    if (args) {\n      self.postMessage((".concat(task, ").apply(null, args))\n      return close()\n    }\n    self.postMessage((").concat(task, ")())\n    return close()\n  }");
-  });
-
-  _defineProperty(this, "buildUri", function (jsScriprt) {
-    var URL = window.URL || window.webkitURL;
-    var blob = new Blob([jsScriprt], {
-      type: 'application/javascript'
-    });
-    _this2.objectUri = URL.createObjectURL(blob);
-  });
-
-  _defineProperty(this, "create", function (func, delay) {
-    var that = _this2;
-
-    if (!that.objectUri) {
-      var jsScriprtStr = _this2.buildScript(func);
-
-      that.buildUri(jsScriprtStr);
-    }
-
-    if (!that.worker) {
-      that.worker = new Worker(_this2.objectUri);
-    }
-  });
-
-  _defineProperty(this, "createDeamonWorker", function (delay) {
-    var that = _this2;
-
-    if (!!delay && delay > 0) {
-      var deammonTiming = that.deamonWorker.getDeamonWorker();
-      return new Promise(function (resolve, reject) {
-        deammonTiming.port.onmessage = function (e) {
-          that.destroy();
-          reject("".concat(e.data, ". this worker is closed"));
-        };
-
-        deammonTiming.port.postMessage([delay]);
-        console.log("deamonWorker timing start...");
-      });
-    }
-
-    return undefined;
-  });
-
-  _defineProperty(this, "destroy", function () {
-    if (_this2.worker) {
-      _this2.worker.terminate();
-
-      _this2.worker = undefined;
-    }
-
-    if (_this2.objectUri !== "testUri") {
-      var URL = window.URL || window.webkitURL;
-      URL.revokeObjectURL(_this2.objectUri);
-      _this2.objectUri = undefined;
-    }
-  });
-
-  _defineProperty(this, "run", function (task, args) {
-    var validWork = isValid(task)('function');
-    var validArgs = isValid(args)(['array', 'undefined']);
-
-    if (!validWork) {
-      console.error(argumentError({
-        expected: 'a function',
-        received: task
-      }));
-      return null;
-    }
-
-    if (!validArgs) {
-      console.error(argumentError({
-        expected: 'an array',
-        received: args
-      }));
-      return null;
-    }
-
-    var that = _this2;
-
-    _this2.create(task);
-
-    return function (delay) {
-      var deamonPromise = _this2.createDeamonWorker(delay);
-
-      return new Promise(function (resolve, reject) {
-        !!deamonPromise && deamonPromise["catch"](reject);
-
-        that.worker.onmessage = function (event) {
-          that.destroy();
-          resolve(event.data);
-        };
-
-        that.worker.onerror = function (error) {
-          console.error("Error: Line ".concat(error.lineno, " in ").concat(error.filename, ": ").concat(error.message));
-          reject(error);
-        };
-
-        that.worker.postMessage({
-          message: {
-            args: args
-          }
-        });
-      });
+  _defineProperty(this, "run", function () {
+    return function () {
+      console.error('This browser does not have the conditions for execution');
+      return undefined;
     };
   });
-
-  this.objectUri = threadOptions === null || threadOptions === void 0 ? void 0 : threadOptions.objectUri;
-  this.worker = threadOptions === null || threadOptions === void 0 ? void 0 : threadOptions.worker;
-  this.deamonWorker = (threadOptions === null || threadOptions === void 0 ? void 0 : threadOptions.deamonWorker) || DeamonWorker;
 });
+
+var Thread = /*#__PURE__*/function (_ThreadBase) {
+  _inherits(Thread, _ThreadBase);
+
+  var _super = _createSuper(Thread);
+
+  function Thread(threadOptions) {
+    var _this2;
+
+    _classCallCheck(this, Thread);
+
+    _this2 = _super.call(this);
+
+    _defineProperty(_assertThisInitialized(_this2), "deamonWorker", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "objectUri", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "worker", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "buildScript", function (task) {
+      return "\n  self.onmessage = function(event) {\n    const args = event.data.message.args\n    if (args) {\n      self.postMessage((".concat(task, ").apply(null, args))\n      return close()\n    }\n    self.postMessage((").concat(task, ")())\n    return close()\n  }");
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "buildUri", function (jsScriprt) {
+      var URL = window.URL || window.webkitURL;
+      var blob = new Blob([jsScriprt], {
+        type: 'application/javascript'
+      });
+      _this2.objectUri = URL.createObjectURL(blob);
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "create", function (func, delay) {
+      var that = _assertThisInitialized(_this2);
+
+      if (!that.objectUri) {
+        var jsScriprtStr = _this2.buildScript(func);
+
+        that.buildUri(jsScriprtStr);
+      }
+
+      if (!that.worker) {
+        that.worker = new Worker(_this2.objectUri);
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "createDeamonWorker", function (delay) {
+      var that = _assertThisInitialized(_this2);
+
+      if (!!delay && delay > 0) {
+        var deammonTiming = that.deamonWorker.getDeamonWorker();
+        return new Promise(function (resolve, reject) {
+          deammonTiming.port.onmessage = function (e) {
+            that.destroy();
+            reject("".concat(e.data, ". this worker is closed"));
+          };
+
+          deammonTiming.port.postMessage([delay]);
+        });
+      }
+
+      return undefined;
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "destroy", function () {
+      if (_this2.worker) {
+        _this2.worker.terminate();
+
+        _this2.worker = undefined;
+      }
+
+      if (_this2.objectUri !== "testUri") {
+        var URL = window.URL || window.webkitURL;
+        URL.revokeObjectURL(_this2.objectUri);
+        _this2.objectUri = undefined;
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "run", function (task, args) {
+      var validWork = isValid(task)('function');
+      var validArgs = isValid(args)(['array', 'undefined']);
+
+      if (!validWork) {
+        console.error(argumentError({
+          expected: 'a function',
+          received: task
+        }));
+        return null;
+      }
+
+      if (!validArgs) {
+        console.error(argumentError({
+          expected: 'an array',
+          received: args
+        }));
+        return null;
+      }
+
+      var that = _assertThisInitialized(_this2);
+
+      _this2.create(task);
+
+      return function (delay) {
+        var deamonPromise = _this2.createDeamonWorker(delay);
+
+        return new Promise(function (resolve, reject) {
+          !!deamonPromise && deamonPromise["catch"](reject);
+
+          that.worker.onmessage = function (event) {
+            that.destroy();
+            resolve(event.data);
+          };
+
+          that.worker.onerror = function (error) {
+            console.error("Error: Line ".concat(error.lineno, " in ").concat(error.filename, ": ").concat(error.message));
+            reject(error);
+          };
+
+          that.worker.postMessage({
+            message: {
+              args: args
+            }
+          });
+        });
+      };
+    });
+
+    _this2.objectUri = threadOptions === null || threadOptions === void 0 ? void 0 : threadOptions.objectUri;
+    _this2.worker = threadOptions === null || threadOptions === void 0 ? void 0 : threadOptions.worker;
+    _this2.deamonWorker = (threadOptions === null || threadOptions === void 0 ? void 0 : threadOptions.deamonWorker) || DeamonWorker;
+    return _this2;
+  }
+
+  return _createClass(Thread);
+}(ThreadBase);
 
 var WorkerBuilder = /*#__PURE__*/_createClass(function WorkerBuilder() {
   var _this3 = this;
@@ -294,17 +329,7 @@ var WorkerBuilder = /*#__PURE__*/_createClass(function WorkerBuilder() {
     return _this3.thread;
   });
 
-  this.thread = /*#__PURE__*/function () {
-    function _class2() {
-      _classCallCheck(this, _class2);
-
-      _defineProperty(this, "run", function () {
-        console.error('This browser does not have the conditions for execution');
-      });
-    }
-
-    return _createClass(_class2);
-  }();
+  this.thread = ThreadBase;
 
   if (!window.Worker) {
     console.error('This browser does not support Workers.');

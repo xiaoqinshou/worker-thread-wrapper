@@ -1,4 +1,4 @@
-import babel from 'rollup-plugin-babel';
+import babel from '@rollup/plugin-babel';
 import {uglify} from 'rollup-plugin-uglify'
 import filesize from 'rollup-plugin-filesize'
 import dts  from 'rollup-plugin-dts'

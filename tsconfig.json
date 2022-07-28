@@ -31,7 +31,7 @@
     ], /* 类型声明文件 */
     "typeRoots": [
       "node_modules/@types",
-      "./src/index.d.ts"
+      "src/types.ts"
     ], /* 类型查找路径 */
   },
   "include": [
