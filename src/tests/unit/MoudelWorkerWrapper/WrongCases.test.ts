@@ -1,13 +1,10 @@
 
+import VirtualThreadFactory from "../../VirtualThreadFactory";
 import { Thread as WorkerWrapper } from "../../../Thread";
-import VirtualWorker from "../../VirtualWorker";
 
-const virtualWorker = new VirtualWorker()
+const virtualThreadFactory = new VirtualThreadFactory()
 
-const workerWrapper = () => new WorkerWrapper({
-  objectUri: "testUri",
-  worker: virtualWorker as any
-});
+const workerWrapper = () => new WorkerWrapper(virtualThreadFactory as any);
 
 describe('run - Wrong use cases\n  Run:', () => {
   describe('Logs an error when', () => {

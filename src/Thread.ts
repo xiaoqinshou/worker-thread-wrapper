@@ -1,68 +1,24 @@
-import { ArgumentType } from "./types";
+import { ArgumentType, ThreadFactory, ThreadUnit } from "./types";
 import { DeamonWorker, Deamon } from "./DaemonWorker";
-import { isValid, argumentError } from "./utils";
-import { ThreadBase } from "./ThreadBase";
+import { isValid, argumentError } from "./util/utils";
+import AbstractThread from "./AbstractThread";
+import SimpleThreadFactory from "./SimpleThreadFactory";
 
-export class Thread extends ThreadBase {
-  constructor(threadOptions?: { objectUri?: string, worker?: Worker, deamonWorker?: Deamon }) {
+export class Thread extends AbstractThread {
+  constructor(threadFactory?: ThreadFactory<Worker>, deamonWorker?: Deamon) {
     super()
-    this.objectUri = threadOptions?.objectUri;
-    this.worker = threadOptions?.worker;
-    this.deamonWorker = threadOptions?.deamonWorker || DeamonWorker
+    this.deamonWorker = deamonWorker || DeamonWorker
+    this.threadFactory = threadFactory || new SimpleThreadFactory()
   }
 
   private deamonWorker: Deamon;
 
-  private objectUri: string;
+  private threadFactory: ThreadFactory<Worker>;
 
-  private worker: Worker;
+  private thread: ThreadUnit<Worker>;
 
-  private buildScript = (task: Function) => `
-  self.onmessage = function(event) {
-    const args = event.data.message.args
-    if (args) {
-      self.postMessage((${task}).apply(null, args))
-      return close()
-    }
-    self.postMessage((${task})())
-    return close()
-  }`
-
-  // private buildTimingScript = (task: Function, sharedUri: string, delay: number) => `
-  // self.onmessage = function(event) {
-  //   var sharedWorker = new SharedWorker('${sharedUri}');
-  //   sharedWorker.port.onmessage = function(e) {
-  //     console.log(e, 'Message received from DaemonWorker');
-  //     self.postMessage(e.data + \`. this worker (${task}) is close\`)
-  //     return close()
-  //   }
-  //   sharedWorker.port.postMessage([${delay}])
-  //   const args = event.data.message.args
-  //   if (args) {
-  //     self.postMessage((${task}).apply(null, args))
-  //     return close()
-  //   }
-  //   self.postMessage((${task})())
-  //   return close()
-  // }`// woker堆栈问题, onmessage一定会在该方法执行完之后执行, 没办法取到一个监听作用
-
-  private buildUri = (jsScriprt: string) => {
-    const URL = window.URL || window.webkitURL
-    const blob = new Blob([jsScriprt], { type: 'application/javascript' }) // eslint-disable-line
-    this.objectUri = URL.createObjectURL(blob)
-  }
-
-  private create = (func: Function, delay?: number) => {
-    // objectUri is not exsit. init
-    const that = this
-    if (!that.objectUri) {
-      let jsScriprtStr = this.buildScript(func)
-      that.buildUri(jsScriprtStr)
-    }
-    // worker is not exsit. init
-    if (!that.worker) {
-      that.worker = new Worker(this.objectUri)
-    }
+  private create = (func: Function) => {
+    this.thread = this.threadFactory.getThread(func)
   }
 
   private createDeamonWorker: (delay?: number) => Promise<string> | undefined = (delay) => {
@@ -83,14 +39,9 @@ export class Thread extends ThreadBase {
 
 
   private destroy = () => {
-    if (this.worker) {
-      this.worker.terminate()
-      this.worker = undefined
-    }
-    if (this.objectUri !== "testUri") {
-      const URL = window.URL || window.webkitURL
-      URL.revokeObjectURL(this.objectUri)
-      this.objectUri = undefined
+    if (this.thread) {
+      this.threadFactory.destroy(this.thread)
+      this.thread = undefined
     }
   }
 
@@ -110,17 +61,17 @@ export class Thread extends ThreadBase {
     this.create(task)
     return (delay?: number) => {
       const deamonPromise = this.createDeamonWorker(delay);
-      return new Promise<T | string>((resolve, reject) => {
+      return new Promise<T>((resolve, reject) => {
         !!deamonPromise && deamonPromise.catch(reject)
-        that.worker.onmessage = (event) => {
+        that.thread.worker.onmessage = (event) => {
           that.destroy()
           resolve(event.data)
         }
-        that.worker.onerror = (error: ErrorEvent) => {
+        that.thread.worker.onerror = (error: ErrorEvent) => {
           console.error(`Error: Line ${error.lineno} in ${error.filename}: ${error.message}`)
           reject(error)
         }
-        that.worker.postMessage({ message: { args } })
+        that.thread.worker.postMessage({ message: { args } })
       })
     }
   }

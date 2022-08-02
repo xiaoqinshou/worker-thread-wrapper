@@ -176,11 +176,48 @@ var argumentError = function argumentError(_ref) {
 var ThreadBase = /*#__PURE__*/_createClass(function ThreadBase() {
   _classCallCheck(this, ThreadBase);
 
-  _defineProperty(this, "run", function () {
-    return function () {
-      console.error('This browser does not have the conditions for execution');
-      return undefined;
+  _defineProperty(this, "run", void 0);
+});
+
+var SimpleThreadFactory = /*#__PURE__*/_createClass(function SimpleThreadFactory() {
+  var _this2 = this;
+
+  _classCallCheck(this, SimpleThreadFactory);
+
+  _defineProperty(this, "buildScript", function (task) {
+    return "\n  self.onmessage = function(event) {\n    const args = event.data.message.args\n    if (args) {\n      self.postMessage((".concat(task, ").apply(null, args))\n      return close()\n    }\n    self.postMessage((").concat(task, ")())\n    return close()\n  }");
+  });
+
+  _defineProperty(this, "buildUri", function (jsScriprt) {
+    var URL = window.URL || window.webkitURL;
+    var blob = new Blob([jsScriprt], {
+      type: 'application/javascript'
+    });
+    return URL.createObjectURL(blob);
+  });
+
+  _defineProperty(this, "getThread", function (task) {
+    var uri = _this2.buildUri(_this2.buildScript(task));
+
+    var worker = new Worker(uri);
+    return {
+      worker: worker,
+      uri: uri
     };
+  });
+
+  _defineProperty(this, "destroy", function (_ref2) {
+    var worker = _ref2.worker,
+        uri = _ref2.uri;
+
+    if (worker) {
+      worker.terminate();
+    }
+
+    if (uri) {
+      var URL = window.URL || window.webkitURL;
+      URL.revokeObjectURL(uri);
+    }
   });
 });
 
@@ -189,47 +226,25 @@ var Thread = /*#__PURE__*/function (_ThreadBase) {
 
   var _super = _createSuper(Thread);
 
-  function Thread(threadOptions) {
-    var _this2;
+  function Thread(threadFactory, deamonWorker) {
+    var _this3;
 
     _classCallCheck(this, Thread);
 
-    _this2 = _super.call(this);
+    _this3 = _super.call(this);
 
-    _defineProperty(_assertThisInitialized(_this2), "deamonWorker", void 0);
+    _defineProperty(_assertThisInitialized(_this3), "deamonWorker", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "objectUri", void 0);
+    _defineProperty(_assertThisInitialized(_this3), "threadFactory", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "worker", void 0);
+    _defineProperty(_assertThisInitialized(_this3), "thread", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "buildScript", function (task) {
-      return "\n  self.onmessage = function(event) {\n    const args = event.data.message.args\n    if (args) {\n      self.postMessage((".concat(task, ").apply(null, args))\n      return close()\n    }\n    self.postMessage((").concat(task, ")())\n    return close()\n  }");
+    _defineProperty(_assertThisInitialized(_this3), "create", function (func) {
+      _this3.thread = _this3.threadFactory.getThread(func);
     });
 
-    _defineProperty(_assertThisInitialized(_this2), "buildUri", function (jsScriprt) {
-      var URL = window.URL || window.webkitURL;
-      var blob = new Blob([jsScriprt], {
-        type: 'application/javascript'
-      });
-      _this2.objectUri = URL.createObjectURL(blob);
-    });
-
-    _defineProperty(_assertThisInitialized(_this2), "create", function (func, delay) {
-      var that = _assertThisInitialized(_this2);
-
-      if (!that.objectUri) {
-        var jsScriprtStr = _this2.buildScript(func);
-
-        that.buildUri(jsScriprtStr);
-      }
-
-      if (!that.worker) {
-        that.worker = new Worker(_this2.objectUri);
-      }
-    });
-
-    _defineProperty(_assertThisInitialized(_this2), "createDeamonWorker", function (delay) {
-      var that = _assertThisInitialized(_this2);
+    _defineProperty(_assertThisInitialized(_this3), "createDeamonWorker", function (delay) {
+      var that = _assertThisInitialized(_this3);
 
       if (!!delay && delay > 0) {
         var deammonTiming = that.deamonWorker.getDeamonWorker();
@@ -246,21 +261,15 @@ var Thread = /*#__PURE__*/function (_ThreadBase) {
       return undefined;
     });
 
-    _defineProperty(_assertThisInitialized(_this2), "destroy", function () {
-      if (_this2.worker) {
-        _this2.worker.terminate();
+    _defineProperty(_assertThisInitialized(_this3), "destroy", function () {
+      if (_this3.thread) {
+        _this3.threadFactory.destroy(_this3.thread);
 
-        _this2.worker = undefined;
-      }
-
-      if (_this2.objectUri !== "testUri") {
-        var URL = window.URL || window.webkitURL;
-        URL.revokeObjectURL(_this2.objectUri);
-        _this2.objectUri = undefined;
+        _this3.thread = undefined;
       }
     });
 
-    _defineProperty(_assertThisInitialized(_this2), "run", function (task, args) {
+    _defineProperty(_assertThisInitialized(_this3), "run", function (task, args) {
       var validWork = isValid(task)('function');
       var validArgs = isValid(args)(['array', 'undefined']);
 
@@ -280,27 +289,27 @@ var Thread = /*#__PURE__*/function (_ThreadBase) {
         return null;
       }
 
-      var that = _assertThisInitialized(_this2);
+      var that = _assertThisInitialized(_this3);
 
-      _this2.create(task);
+      _this3.create(task);
 
       return function (delay) {
-        var deamonPromise = _this2.createDeamonWorker(delay);
+        var deamonPromise = _this3.createDeamonWorker(delay);
 
         return new Promise(function (resolve, reject) {
           !!deamonPromise && deamonPromise["catch"](reject);
 
-          that.worker.onmessage = function (event) {
+          that.thread.worker.onmessage = function (event) {
             that.destroy();
             resolve(event.data);
           };
 
-          that.worker.onerror = function (error) {
+          that.thread.worker.onerror = function (error) {
             console.error("Error: Line ".concat(error.lineno, " in ").concat(error.filename, ": ").concat(error.message));
             reject(error);
           };
 
-          that.worker.postMessage({
+          that.thread.worker.postMessage({
             message: {
               args: args
             }
@@ -309,27 +318,24 @@ var Thread = /*#__PURE__*/function (_ThreadBase) {
       };
     });
 
-    _this2.objectUri = threadOptions === null || threadOptions === void 0 ? void 0 : threadOptions.objectUri;
-    _this2.worker = threadOptions === null || threadOptions === void 0 ? void 0 : threadOptions.worker;
-    _this2.deamonWorker = (threadOptions === null || threadOptions === void 0 ? void 0 : threadOptions.deamonWorker) || DeamonWorker;
-    return _this2;
+    _this3.deamonWorker = deamonWorker || DeamonWorker;
+    _this3.threadFactory = threadFactory || new SimpleThreadFactory();
+    return _this3;
   }
 
   return _createClass(Thread);
 }(ThreadBase);
 
 var WorkerBuilder = /*#__PURE__*/_createClass(function WorkerBuilder() {
-  var _this3 = this;
+  var _this4 = this;
 
   _classCallCheck(this, WorkerBuilder);
 
   _defineProperty(this, "thread", void 0);
 
   _defineProperty(this, "build", function () {
-    return _this3.thread;
+    return _this4.thread;
   });
-
-  this.thread = ThreadBase;
 
   if (!window.Worker) {
     console.error('This browser does not support Workers.');

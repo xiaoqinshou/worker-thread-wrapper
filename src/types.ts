@@ -1,7 +1,49 @@
-import { ThreadBase } from "./ThreadBase";
+import AbstractThread from "./AbstractThread";
+import AbstractThreadPoolExecutor from "./AbstractThreadPoolExecutor";
+import { Queue } from "./util/types";
+
+declare type ThreadPoolTask<T> = {
+  func: Function,
+  args: ArgumentType,
+  callback: (t: T) => void,
+  delay?: number,
+}
+
+declare type ThreadUnit<W extends AbstractWorker> = {
+  worker: W,
+  uri: string,
+}
+
+declare interface ThreadFactory<W extends AbstractWorker> {
+  getThread: (task?: Function) => ThreadUnit<W>
+  destroy: (thread: ThreadUnit<W>) => void
+}
+
+declare type ThreadPoolOptions<T, W extends AbstractWorker> = {
+  corePoolSize: number;
+  maximumPoolSize: number;
+  keepAliveTime: number;
+  timeUnit: TimeUnit;
+  workQueue: Queue<ThreadPoolTask<T>>;
+  workerFactory?: ThreadFactory<W>;
+  rejectedExecutionHandler?: RejectedExecutionHandler<T>;
+}
+
+declare interface RejectedExecutionHandler<T> {
+  rejectedExecution: (task: T, poolExecutor: AbstractThreadPoolExecutor) => void;
+}
+
+declare enum TimeUnit {
+  MILLISECONDS = 1,
+  SECONDS = 1000 * MILLISECONDS,
+  MINUTES = 60 * SECONDS,
+  HOURS = 60 * MINUTES,
+  DAYS = 24 * HOURS
+}
+
 declare interface ThreadConstructor {
-  readonly prototype: ThreadBase;
-  new (): ThreadBase;
+  readonly prototype: AbstractThread;
+  new(): AbstractThread;
 }
 
 // register task Base
@@ -22,7 +64,7 @@ declare interface WorkerPoolInterface extends CollectionWorkerBase {
   execption: () => void;
 }
 
-declare type BaseObject = Object | String | Number | Boolean | Function;
+declare type BaseObject = Object | Array<BaseObject> | String | Number | Boolean;
 
 declare type ArgumentType = Array<BaseObject>
 
@@ -55,6 +97,11 @@ declare type PostParams = FuncMessage & {
 }
 
 export {
+  ThreadPoolTask,
+  ThreadUnit,
+  ThreadFactory,
+  TimeUnit,
+  ThreadPoolOptions,
   ThreadConstructor,
   WorkerTasksWrapperInterface,
   WorkerPoolInterface,

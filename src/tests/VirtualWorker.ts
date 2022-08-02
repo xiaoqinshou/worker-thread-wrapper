@@ -1,10 +1,10 @@
-export default class VirtualWorker {
+export default class VirtualWorker implements AbstractWorker {
   private worker: VirtualWorker;
   private task: Function = undefined;
   private delay: number = 100000;
   constructor(task?: Function, delay?: number) {
     this.task = task
-    if(!!delay&&delay>0){
+    if (!!delay && delay > 0) {
       this.delay = delay
     }
   }
@@ -24,9 +24,9 @@ export default class VirtualWorker {
       try {
         const res = this.task.apply(null, args)
         // simulation delay return
-        if(new Date().getTime() < timeOver) {
+        if (new Date().getTime() < timeOver) {
           pointer.onmessage({ data: res })
-        }else{
+        } else {
           pointer.onmessage({ data: "time over" })
         }
       } catch (error) {
@@ -38,4 +38,15 @@ export default class VirtualWorker {
   onerror = (err: any) => { console.error(err, "onerror") }
 
   terminate = () => { }
+
+  addEventListener<K extends "error">(type: K, listener: (this: AbstractWorker, ev: AbstractWorkerEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+  addEventListener(type: unknown, listener: unknown, options?: unknown): void {
+    throw new Error("Method not implemented.");
+  }
+  removeEventListener<K extends "error">(type: K, listener: (this: AbstractWorker, ev: AbstractWorkerEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+  removeEventListener(type: unknown, listener: unknown, options?: unknown): void {
+    throw new Error("Method not implemented.");
+  }
 }

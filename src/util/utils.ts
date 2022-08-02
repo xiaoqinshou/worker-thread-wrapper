@@ -1,4 +1,4 @@
-import { InferredType, ExtensionArrayType, CollectionFuncObj, TestArrayType, PostParams, ExecptionMessage } from "./types"
+import { InferredType, ExtensionArrayType, CollectionFuncObj, TestArrayType, PostParams, ExecptionMessage } from "../types"
 
 const isValid = (argument: any) => (types: InferredType | InferredType[]) => {
   if (Array.isArray(types)) {
