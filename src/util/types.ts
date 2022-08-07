@@ -59,7 +59,7 @@ declare interface Collection<E> {
 }
 
 
-declare interface Queue<E> extends Collection<E>{
+declare interface Queue<E> extends Collection<E> {
   /**
      * Inserts the specified element into this queue if it is possible to do so
      * immediately without violating capacity restrictions, returning

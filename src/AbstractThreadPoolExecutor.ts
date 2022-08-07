@@ -1,6 +1,6 @@
 import { ThreadPoolOptions, ThreadPoolTask } from "./types";
 
-export default abstract class AbstractThreadPoolExecutor<T> {
-  constructor(options?: ThreadPoolOptions<void, AbstractWorker>) { }
-  abstract submit: (task: ThreadPoolTask<T>) => void;
+export default abstract class AbstractThreadPoolExecutor {
+  constructor(options?: ThreadPoolOptions<AbstractWorker>) { }
+  abstract submit: (task: ThreadPoolTask) => void;
 }

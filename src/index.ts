@@ -1,7 +1,9 @@
 import { Thread } from "./Thread"
-import { ThreadConstructor } from "./types"
+import ThreadPoolExecutor from "./ThreadPoolExecutor";
+import { ThreadConstructor, ThreadPoolExecutorConstructor } from "./types"
 class WorkerBuilder {
   private thread: ThreadConstructor;
+  private threadPoolExecutor: ThreadPoolExecutorConstructor;
   
   constructor() {
     if (!window.Worker) {
@@ -17,8 +19,11 @@ class WorkerBuilder {
       return
     }
     this.thread = Thread
+    this.threadPoolExecutor = ThreadPoolExecutor
   }
   public build = () => this.thread
+
+  public buildPoolExecutor = () => this.threadPoolExecutor
 }
 
 export default WorkerBuilder

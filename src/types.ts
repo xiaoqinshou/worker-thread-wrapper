@@ -2,11 +2,12 @@ import AbstractThread from "./AbstractThread";
 import AbstractThreadPoolExecutor from "./AbstractThreadPoolExecutor";
 import { Queue } from "./util/types";
 
-declare type ThreadPoolTask<T> = {
+declare type ThreadPoolTask = {
   func: Function,
   args: ArgumentType,
-  callback: (t: T) => void,
-  delay?: number,
+  success: (event: Event) => void,
+  error: (event: Event | TypeError) => void,
+  // delay?: number,
 }
 
 declare type ThreadUnit<W extends AbstractWorker> = {
@@ -19,27 +20,33 @@ declare interface ThreadFactory<W extends AbstractWorker> {
   destroy: (thread: ThreadUnit<W>) => void
 }
 
-declare type ThreadPoolOptions<T, W extends AbstractWorker> = {
+declare type ThreadPoolOptions<W extends AbstractWorker> = {
   corePoolSize: number;
   maximumPoolSize: number;
   keepAliveTime: number;
   timeUnit: TimeUnit;
-  workQueue: Queue<ThreadPoolTask<T>>;
+  workQueue: Queue<ThreadPoolTask>;
   workerFactory?: ThreadFactory<W>;
-  rejectedExecutionHandler?: RejectedExecutionHandler<T>;
+  rejectedExecutionHandler?: RejectedExecutionHandler;
 }
 
-declare interface RejectedExecutionHandler<T> {
-  rejectedExecution: (task: T, poolExecutor: AbstractThreadPoolExecutor) => void;
+declare interface RejectedExecutionHandler {
+  rejectedExecution: (task: ThreadPoolTask, poolExecutor: AbstractThreadPoolExecutor, error: TypeError) => void;
 }
 
-declare enum TimeUnit {
+enum TimeUnit {
   MILLISECONDS = 1,
   SECONDS = 1000 * MILLISECONDS,
   MINUTES = 60 * SECONDS,
   HOURS = 60 * MINUTES,
   DAYS = 24 * HOURS
 }
+
+declare interface ThreadPoolExecutorConstructor {
+  readonly prototype: AbstractThreadPoolExecutor;
+  new(): AbstractThreadPoolExecutor;
+}
+
 
 declare interface ThreadConstructor {
   readonly prototype: AbstractThread;
@@ -78,7 +85,7 @@ declare type InferredType = JavaScriptBaseType | ExtensionType | ExtensionArrayT
 
 declare type ExecptionMessage = {
   expected: String;
-  received: ArgumentType | Function;
+  received: ArgumentType | Function | Object;
   extraInfo?: String
 }
 
@@ -97,6 +104,8 @@ declare type PostParams = FuncMessage & {
 }
 
 export {
+  ThreadPoolExecutorConstructor,
+  RejectedExecutionHandler,
   ThreadPoolTask,
   ThreadUnit,
   ThreadFactory,

@@ -11,10 +11,9 @@ export default class SimpleThreadUnitFactory extends AbstractThreadFactory<Worke
     var task = event.data.message.task
     if (args) {
       self.postMessage(eval(task).apply(null, args))
-      return close()
+    }else{
+      self.postMessage(eval(task)())
     }
-    self.postMessage(eval(task)())
-    return close()
   }`
   getThread: (task?: Function) => ThreadUnit<Worker> = (task?: Function) => {
     const uri = this.buildUri(this.buildScript(task))

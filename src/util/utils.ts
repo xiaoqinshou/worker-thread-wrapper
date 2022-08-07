@@ -73,6 +73,7 @@ const argumentError = ({ expected = '', received, extraInfo = '' }:ExecptionMess
 }
 
 export {
+  isValidObjectWith,
   argumentError,
   isValid
 }
