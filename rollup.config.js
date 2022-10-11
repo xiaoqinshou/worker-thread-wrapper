@@ -21,8 +21,7 @@ export default [
     output: {
       file: 'dist/wtw.min.js',
       format: 'cjs',
-      exports: 'auto',
-      sourcemap: true
+      exports: 'auto'
     }
   },
   {

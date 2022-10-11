@@ -7,3 +7,8 @@ rollup.config.js
 demo
 config
 jest.config.js
+.history
+tsconfig.json
+yarn.lock
+yarn-error.log
+.babelrc

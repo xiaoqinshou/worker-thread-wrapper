@@ -4,7 +4,7 @@
 
 ## Changelog
 
-### **0.0.6**
+### **0.0.8**
 
 #### _Highlights:_
 * 0.0.1: First upload. and 
@@ -13,6 +13,8 @@
 * 0.0.4: modify types definition. Use when perfecting typescript project references
 * 0.0.5: Remove redundant dependencies on npm.
 * 0.0.6: Add Thread Pool Executor. Manage the use of workers as a pool
+* 0.0.7: Remove .history files on npm
+* 0.0.8: Remove yarn.lock and other files on npm
 ## Why
 
 Create and use [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) can be cumbersome sometimes. This plugin aims to facilitate the use of Web Workers.
